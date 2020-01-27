@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_library(CompiledNN
+add_library(CompiledNN STATIC
     Src/CompiledNN/CompiledNN.cpp
     Src/CompiledNN/CompiledNN.h
     Src/CompiledNN/Model.cpp
@@ -216,15 +216,15 @@ set_target_properties(CompiledNN PROPERTIES
 )
 
 find_package(HDF5 REQUIRED)
-if(NOT TARGET hdf5::hdf5-shared)
-  add_library(hdf5::hdf5-shared INTERFACE IMPORTED)
-  set_target_properties(hdf5::hdf5-shared PROPERTIES
+if(NOT TARGET hdf5::hdf5-static)
+  add_library(hdf5::hdf5-static INTERFACE IMPORTED)
+  set_target_properties(hdf5::hdf5-static PROPERTIES
       INTERFACE_LINK_LIBRARIES "${HDF5_C_LIBRARIES}"
       INTERFACE_INCLUDE_DIRECTORIES "${HDF5_C_INCLUDE_DIRS}"
       INTERFACE_COMPILE_OPTIONS "${HDF5_C_DEFINITIONS}"
   )
 endif()
-target_link_libraries(CompiledNN PRIVATE hdf5::hdf5-shared)
+target_link_libraries(CompiledNN PRIVATE hdf5::hdf5-static)
 
 if(WITH_APPLICATIONS)
   add_executable(Benchmark Tests/Benchmark.cpp)
@@ -232,6 +232,11 @@ if(WITH_APPLICATIONS)
 
   add_executable(Check Tests/Check.cpp)
   target_link_libraries(Check PRIVATE CompiledNN)
+
+  add_executable(Predicter Tests/Predicter.cpp)
+  target_link_libraries(Predicter PRIVATE CompiledNN)
+  find_package(nlohmann_json CONFIG REQUIRED)
+  target_link_libraries(Predicter PRIVATE nlohmann_json nlohmann_json::nlohmann_json)
 endif()
 
 if(WITH_TESTS)
