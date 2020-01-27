@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <regex>
 
 class In;
 
@@ -100,6 +101,64 @@ namespace NeuralNetwork
   protected:
     Layer(const LayerType type) : type(type) {}
   };
+  
+  struct KerasVersion
+  {
+    unsigned long major_ = 0;
+    unsigned long minor_ = 0;
+    unsigned long patch_ = 0;
+    bool isTensorflow_ = false;
+    
+    KerasVersion() = default;
+    KerasVersion(const KerasVersion &other) : major_(other.major_), minor_(other.minor_), patch_(other.patch_), isTensorflow_(other.isTensorflow_) {}
+    KerasVersion &operator=(const KerasVersion &other) {
+      if(&other != this) {
+        major_ = other.major_;
+        minor_ = other.minor_;
+        patch_ = other.patch_;
+        isTensorflow_ = other.isTensorflow_;
+      }
+      return *this;
+    }
+    KerasVersion(unsigned long major, unsigned long minor, unsigned long patch, bool isTensorflow = false) : major_(major), minor_(minor), patch_(patch), isTensorflow_(isTensorflow) {}
+    KerasVersion(const std::string &versionString) {
+      try {
+        std::regex re("(\\d+)\\.(\\d+)\\.(\\d+)(-tf)?");
+        std::smatch match;
+        if(std::regex_match(versionString, match, re)) {
+          major_ = std::stoi(match[1]);
+          minor_ = std::stoi(match[2]);
+          patch_ = std::stoi(match[3]);
+          isTensorflow_ = !match[4].str().empty();
+        }
+      } catch(const std::regex_error&) {
+        // do nothing
+      } catch(const std::invalid_argument&) {
+        // do nothing
+      } catch(const std::out_of_range&) {
+        // do nothing
+      }
+    }
+    
+    inline bool operator<(const KerasVersion &other) const {
+      return major_ < other.major_ || (major_ == other.major_ && minor_ < other.minor_) || (major_ == other.major_ && minor_ == other.minor_ && patch_ < other.patch_);
+    }
+    inline bool operator>(const KerasVersion &other) const {
+      return major_ > other.major_ || (major_ == other.major_ && minor_ > other.minor_) || (major_ == other.major_ && minor_ == other.minor_ && patch_ > other.patch_);
+    }
+    inline bool operator==(const KerasVersion &other) const {
+      return major_ == other.major_ && minor_ == other.minor_ && patch_ == other.patch_;
+    }
+    inline bool operator!=(const KerasVersion &other) const {
+      return !operator==(other);
+    }
+    inline bool operator<=(const KerasVersion &other) const {
+      return operator<(other) || operator==(other);
+    }
+    inline bool operator>=(const KerasVersion &other) const {
+      return operator>(other) || operator==(other);
+    }
+  };
 
   /**
    * A struct that describes a neural network model.
@@ -120,7 +179,7 @@ namespace NeuralNetwork
     /**
      * Parses a model from a JSON description.
      */
-    void parseJSONModel(In& stream, const std::string& fileName, const GetWeightsFuncType& getWeights, unsigned long kerasVersion);
+    void parseJSONModel(In& stream, const std::string& fileName, const GetWeightsFuncType& getWeights, const KerasVersion &kerasVersion);
 
   public:
     Model() = default;
