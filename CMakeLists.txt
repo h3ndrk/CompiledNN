@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
+
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+endif()
+
 project(CompiledNN VERSION 1.0.0 LANGUAGES C CXX)
 
 option(WITH_APPLICATIONS "Build applications." OFF)
