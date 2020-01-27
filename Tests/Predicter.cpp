@@ -1,23 +1,58 @@
+#include <iostream>
 #include <CompiledNN/Model.h>
 #include <CompiledNN/CompiledNN.h>
+#include <nlohmann/json.hpp>
 
-using namespace NeuralNetwork;
-
-void testModelLoad(const std::string &file)
+nlohmann::json predict_model(nlohmann::json input, const std::string &model_path)
 {
-    Model model;
-    model.load(file);
-    // Optionally, indicate which input tensors should be converted from unsigned chars to floats in the beginning.
-    // model.setInputUInt8(0);
-    CompiledNN nn;
+    ASSERT(input.is_array());
+    ASSERT(input.size() > 0);
+
+    const auto is_float = input[0].is_number_float();
+    for (auto &value : input)
+    {
+        ASSERT(value.is_number());
+        ASSERT(is_float == value.is_number_float());
+    }
+
+    NeuralNetwork::Model model;
+    model.load(model_path);
+
+    if (!is_float)
+    {
+        model.setInputUInt8(0);
+    }
+
+    NeuralNetwork::CompiledNN nn;
     nn.compile(model);
-    // ... fill nn.input(i) with data
+
+    for (unsigned int i = 0; i < input.size(); ++i)
+    {
+        if (is_float)
+        {
+            nn.input(0)[i] = input[i].get<float>();
+        }
+        else
+        {
+            nn.input(0)[i] = input[i].get<uint8_t>();
+        }
+    }
+
     nn.apply();
+
+    nlohmann::json output;
+    for (auto &value : nn.output(0))
+    {
+        output.push_back(value);
+    }
+    return output;
 }
 
-int main()
+int main(int argc, const char *argv[])
 {
-    testModelLoad("doqyqu5580426-195_model_pos_guess");
-    testModelLoad("qogwyfu161554-2250_model_classifier");
+    for (std::string line; std::getline(std::cin, line);)
+    {
+        std::cout << predict_model(nlohmann::json::parse(line), argv[1]).dump() << std::endl;
+    }
     return 0;
 }
