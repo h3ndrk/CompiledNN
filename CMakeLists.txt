@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.14)
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
@@ -175,20 +175,32 @@ add_library(CompiledNN STATIC
 )
 
 target_compile_options(CompiledNN PRIVATE
-    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wall>
-    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wextra>
-    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wno-unused-parameter>
-    $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-fno-strict-aliasing>
+    $<$<CXX_COMPILER_ID:Clang>:-Wall>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wall>
+    $<$<CXX_COMPILER_ID:GNU>:-Wall>
+    $<$<CXX_COMPILER_ID:Clang>:-Wextra>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wextra>
+    $<$<CXX_COMPILER_ID:GNU>:-Wextra>
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:GNU>:-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:Clang>:-fno-strict-aliasing>
+    $<$<CXX_COMPILER_ID:AppleClang>:-fno-strict-aliasing>
+    $<$<CXX_COMPILER_ID:GNU>:-fno-strict-aliasing>
     $<$<CXX_COMPILER_ID:MSVC>:/W3>
 )
 
 if(WITH_COVERAGE)
   target_compile_options(CompiledNN PUBLIC
-      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fprofile-instr-generate>
-      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fcoverage-mapping>)
+      $<$<CXX_COMPILER_ID:Clang>:-fprofile-instr-generate>
+      $<$<CXX_COMPILER_ID:AppleClang>:-fprofile-instr-generate>
+      $<$<CXX_COMPILER_ID:Clang>:-fcoverage-mapping>
+      $<$<CXX_COMPILER_ID:AppleClang>:-fcoverage-mapping>)
   target_link_options(CompiledNN PUBLIC
-      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fprofile-instr-generate>
-      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fcoverage-mapping>)
+      $<$<CXX_COMPILER_ID:Clang>:-fprofile-instr-generate>
+      $<$<CXX_COMPILER_ID:AppleClang>:-fprofile-instr-generate>
+      $<$<CXX_COMPILER_ID:Clang>:-fcoverage-mapping>
+      $<$<CXX_COMPILER_ID:AppleClang>:-fcoverage-mapping>)
   target_compile_options(CompiledNN PUBLIC $<$<CXX_COMPILER_ID:GNU>:--coverage>)
   target_link_options(CompiledNN PUBLIC $<$<CXX_COMPILER_ID:GNU>:--coverage>)
 endif()
